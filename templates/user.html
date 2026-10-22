@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% block title %}My Vehicles • GridSync EV Driver{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Driver Welcome Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-cyan-900 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-xs border border-cyan-500/30">
+                    <i class="fa-solid fa-id-badge mr-1"></i> Driver Priority Console
+                </span>
+                <span class="text-xs text-slate-400">• Priority-Based Workplace Scheduling</span>
+            </div>
+            <h1 class="text-2xl font-extrabold text-white mt-1">{{ current_user.full_name }}</h1>
+            <p class="text-xs text-slate-300 mt-1">Configure your charging priority tier, departure deadlines, and monitor your live position in the workplace charging queue.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold px-3 py-1.5 rounded-xl bg-white/10 border border-white/10 text-slate-200">
+                <i class="fa-solid fa-layer-group mr-1.5 text-cyan-400"></i> {{ current_user.vehicles|length }} Registered Vehicle{% if current_user.vehicles|length != 1 %}s{% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Vehicles Grid (Cards for each variety: EV Car, EV Bike, etc.) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for v in current_user.vehicles %}
+            {% set info = analytics.get(v.id) if analytics else None %}
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 flex flex-col justify-between relative overflow-hidden">
+                
+                <!-- Vehicle Header -->
+                <div>
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl shadow-md
+                                {% if v.vehicle_type == 'EV Bike' %}bg-cyan-100 text-cyan-700
+                                {% elif v.vehicle_type == 'EV Scooter' %}bg-amber-100 text-amber-700
+                                {% elif v.vehicle_type == 'EV SUV / Van' %}bg-purple-100 text-purple-700
+                                {% else %}bg-emerald-100 text-emerald-700{% endif %}">
+                                <i class="fa-solid {% if v.vehicle_type == 'EV Bike' %}fa-motorcycle{% elif v.vehicle_type == 'EV Scooter' %}fa-bolt{% elif v.vehicle_type == 'EV SUV / Van' %}fa-truck{% else %}fa-car{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-base text-slate-900">{{ v.name }}</h3>
+                                <div class="flex items-center space-x-2 mt-0.5">
+                                    <span class="text-[11px] px-2 py-0.5 rounded-full font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                        {{ v.vehicle_type }}
+                                    </span>
+                                    <span class="text-[11px] px-2 py-0.5 rounded-full font-bold
+                                        {% if v.priority_tier == 'urgent' %}bg-rose-100 text-rose-800 border border-rose-200
+                                        {% elif v.priority_tier == 'flexible' %}bg-cyan-100 text-cyan-800 border border-cyan-200
+                                        {% else %}bg-slate-100 text-slate-700 border border-slate-200{% endif %}">
+                                        {% if v.priority_tier == 'urgent' %}⚡ Urgent Commute
+                                        {% elif v.priority_tier == 'flexible' %}🌱 Flexible Eco
+                                        {% else %}🚗 Standard{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Plugged Status -->
+                        <div>
+                            {% if v.is_plugged_in %}
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1.5"></span> Connected
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200 flex items-center">
+                                    <i class="fa-solid fa-plug-circle-xmark mr-1.5"></i> Unplugged
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Battery Gauge -->
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-4">
+                        <div class="flex justify-between items-center text-xs font-bold mb-1.5">
+                            <span class="text-slate-600">Battery Level</span>
+                            <span class="text-slate-900 font-mono">{{ v.current_charge_pct }}% / Target {{ v.target_charge_pct }}%</span>
+                        </div>
+                        <div class="w-full h-3 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: {{ v.current_charge_pct }}%;"></div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] text-slate-500 mt-2 font-mono">
+                            <span>Capacity: {{ v.battery_capacity_kwh }} kWh</span>
+                            <span>Max Port Rate: {{ v.max_rate_kw }} kW</span>
+                            <span>Departure: {{ v.departure_time }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Priority Status & Queue Position (when plugged in) -->
+                    {% if v.is_plugged_in and info %}
+                        <div class="p-4 rounded-2xl bg-gradient-to-tr from-emerald-50 to-cyan-50 border border-emerald-200 text-xs mb-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-1.5">
+                                    <i class="fa-solid fa-ranking-star text-emerald-600"></i>
+                                    <span class="font-bold text-slate-800 uppercase tracking-wider text-[11px]">Campus Priority Queue</span>
+                                </div>
+                                <span class="px-2.5 py-0.5 rounded-full font-black text-xs bg-emerald-600 text-white shadow-sm">
+                                    Rank #{{ info.rank }} of {{ info.total_campus }}
+                                </span>
+                            </div>
+
+                            <!-- Power Allocation and Completion Time -->
+                            <div class="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-white/80 border border-emerald-100 text-[11px]">
+                                <div>
+                                    <span class="text-slate-500 block">Allocated Power:</span>
+                                    <strong class="text-sm font-mono text-emerald-700">{{ info.allocated_kw }} kW</strong>
+                                </div>
+                                <div>
+                                    <span class="text-slate-500 block">Target Full By:</span>
+                                    <strong class="text-sm font-mono text-cyan-800">{{ info.completion_time }}</strong>
+                                </div>
+                            </div>
+
+                            <!-- Priority Score Breakdown -->
+                            <div class="space-y-1">
+                                <div class="flex justify-between text-[11px]">
+                                    <span class="text-slate-600 font-semibold">Priority Score:</span>
+                                    <span class="font-bold text-emerald-800 font-mono">{{ info.priority_score }} pts</span>
+                                </div>
+                                <div class="grid grid-cols-4 gap-1 text-[10px] text-center font-mono">
+                                    <div class="p-1 rounded bg-rose-50 border border-rose-200 text-rose-700">Urgency: {{ info.urgency_part }}</div>
+                                    <div class="p-1 rounded bg-amber-50 border border-amber-200 text-amber-700">Deficit: {{ info.deficit_part }}</div>
+                                    <div class="p-1 rounded bg-cyan-50 border border-cyan-200 text-cyan-700">Time: {{ info.time_part }}</div>
+                                    <div class="p-1 rounded bg-purple-50 border border-purple-200 text-purple-700">Tier: {{ info.tier_part }}</div>
+                                </div>
+                            </div>
+
+                            <!-- E12 Plain English Explanation -->
+                            <div class="pt-2 border-t border-emerald-100 text-slate-700 leading-relaxed text-[11px]">
+                                <i class="fa-solid fa-circle-info text-emerald-600 mr-1"></i>
+                                <span>{{ info.explanation_sentence }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Priority Controls Modal / Toggle Trigger -->
+                    {% if v.is_plugged_in %}
+                        <div class="mb-4 p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                            <form action="{{ url_for('update_priority', vehicle_id=v.id) }}" method="POST" class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Update Charging Priority</label>
+                                    <span class="text-[10px] text-slate-400">Real-time Recalculation</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <label class="block font-medium text-slate-600 text-[11px] mb-1">Priority Tier</label>
+                                        <select name="priority_tier" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium">
+                                            <option value="urgent" {% if v.priority_tier == 'urgent' %}selected{% endif %}>⚡ Urgent Commute (+25 pts)</option>
+                                            <option value="standard" {% if v.priority_tier == 'standard' %}selected{% endif %}>🚗 Standard (Balanced)</option>
+                                            <option value="flexible" {% if v.priority_tier == 'flexible' %}selected{% endif %}>🌱 Flexible Eco (-15 pts)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block font-medium text-slate-600 text-[11px] mb-1">Departure Time</label>
+                                        <input type="time" name="dep_time" value="{{ v.departure_time }}" required
+                                            class="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-medium">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between pt-1">
+                                    {% if current_user.vehicles|length > 1 %}
+                                        <div class="flex items-center space-x-1.5 text-[11px]">
+                                            <span class="text-slate-500">Fleet Order:</span>
+                                            <select name="fleet_rank" class="px-2 py-1 rounded border border-slate-300 text-[11px]">
+                                                <option value="1" {% if v.priority_fleet_rank == 1 %}selected{% endif %}>Primary (1st)</option>
+                                                <option value="2" {% if v.priority_fleet_rank == 2 %}selected{% endif %}>Secondary (2nd)</option>
+                                            </select>
+                                        </div>
+                                    {% else %}
+                                        <div></div>
+                                    {% endif %}
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition">
+                                        Apply Priority
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Plug-In / Unplug Controls Form -->
+                <div class="pt-3 border-t border-slate-100">
+                    {% if v.is_plugged_in %}
+                        <form action="{{ url_for('toggle_plug', vehicle_id=v.id) }}" method="POST">
+                            <input type="hidden" name="action" value="unplug">
+                            <button type="submit"
+                                class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-plug-circle-minus"></i>
+                                <span>Unplug Vehicle</span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <form action="{{ url_for('toggle_plug', vehicle_id=v.id) }}" method="POST" class="space-y-3">
+                            <input type="hidden" name="action" value="plug_in">
+                            <div class="grid grid-cols-3 gap-2 text-xs">
+                                <div>
+                                    <label class="block font-semibold text-slate-600 mb-1">Battery %</label>
+                                    <input type="number" name="current_pct" value="{{ v.current_charge_pct }}" min="5" max="95" required
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-slate-600 mb-1">Departure</label>
+                                    <input type="time" name="dep_time" value="{{ v.departure_time }}" required
+                                        class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300">
+                                </div>
+                                <div>
+                                    <label class="block font-semibold text-slate-600 mb-1">Priority Tier</label>
+                                    <select name="priority_tier" class="w-full px-2 py-1.5 rounded-lg border border-slate-300 text-xs">
+                                        <option value="urgent" {% if v.priority_tier == 'urgent' %}selected{% endif %}>⚡ Urgent</option>
+                                        <option value="standard" {% if v.priority_tier == 'standard' %}selected{% endif %}>🚗 Standard</option>
+                                        <option value="flexible" {% if v.priority_tier == 'flexible' %}selected{% endif %}>🌱 Eco</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit"
+                                class="w-full py-2.5 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-plug-circle-bolt"></i>
+                                <span>Plug In with Selected Priority</span>
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Interactive Priority What-If Simulator & Projected Charge Line Chart (E12) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Live What-If Simulator -->
+        <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 space-y-4">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                    <i class="fa-solid fa-sliders text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Priority Simulator</h3>
+                    <p class="text-[11px] text-slate-500">Test how departure time and priority tier affect your charging speed</p>
+                </div>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Test Departure Time: <span id="simDepLabel" class="font-bold text-slate-900">17:00</span></label>
+                    <input type="range" id="simDepSlider" min="11" max="20" step="1" value="17" oninput="runPrioritySim()"
+                        class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-600 mb-1">Test Priority Tier</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="setSimTier('urgent')" id="btnTierUrgent"
+                            class="py-2 px-1 text-center rounded-xl border border-rose-200 bg-rose-50 text-rose-800 font-bold text-[11px] transition">
+                            ⚡ Urgent
+                        </button>
+                        <button type="button" onclick="setSimTier('standard')" id="btnTierStandard"
+                            class="py-2 px-1 text-center rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-[11px] transition">
+                            🚗 Standard
+                        </button>
+                        <button type="button" onclick="setSimTier('flexible')" id="btnTierFlexible"
+                            class="py-2 px-1 text-center rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-[11px] transition">
+                            🌱 Eco
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Simulation Output Card -->
+                <div class="p-3.5 rounded-2xl bg-slate-900 text-white space-y-2 mt-2">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Predicted Campus Rank:</span>
+                        <span id="simRank" class="font-bold text-emerald-400 text-sm">Rank #1 of 18</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Allocated Power:</span>
+                        <span id="simPower" class="font-bold text-amber-400 text-sm">7.2 kW</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Calculated Priority Score:</span>
+                        <span id="simScore" class="font-mono text-cyan-400 font-bold">85.0 pts</span>
+                    </div>
+                    <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-300" id="simDesc">
+                        At this setting, your vehicle ranks high in the queue and will receive maximum charging power.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projected Charge Trajectory Chart (E12) -->
+        <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">Projection Model</span>
+                    <h3 class="text-base font-bold text-slate-900">Projected Battery Level Until Departure</h3>
+                </div>
+                <span class="text-xs text-slate-500">Dynamic simulation under site cap</span>
+            </div>
+            <p class="text-xs text-slate-600 mb-3">
+                Shows your battery percentage filling up over the workday based on your allocated priority rate.
+            </p>
+            <div class="h-56">
+                <canvas id="projectedChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. Projected Charge Curve Chart
+    const ctx = document.getElementById('projectedChart').getContext('2d');
+    const projectedChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['09:00 (Plug-in)', '11:00', '13:00', '15:00', '17:00 (Departure)'],
+            datasets: [
+                {
+                    label: 'Projected Battery Level (%)',
+                    data: [20, 48, 76, 95, 100],
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#10b981'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 0,
+                    max: 100,
+                    ticks: { callback: v => v + '%' }
+                }
+            }
+        }
+    });
+
+    // 2. Interactive Priority What-If Simulator
+    let simTier = 'urgent';
+
+    function setSimTier(tier) {
+        simTier = tier;
+        document.getElementById('btnTierUrgent').className = (tier === 'urgent')
+            ? 'py-2 px-1 text-center rounded-xl border border-rose-300 bg-rose-100 text-rose-900 font-bold text-[11px] transition'
+            : 'py-2 px-1 text-center rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-[11px] transition';
+        document.getElementById('btnTierStandard').className = (tier === 'standard')
+            ? 'py-2 px-1 text-center rounded-xl border border-slate-400 bg-slate-200 text-slate-900 font-bold text-[11px] transition'
+            : 'py-2 px-1 text-center rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-[11px] transition';
+        document.getElementById('btnTierFlexible').className = (tier === 'flexible')
+            ? 'py-2 px-1 text-center rounded-xl border border-cyan-300 bg-cyan-100 text-cyan-900 font-bold text-[11px] transition'
+            : 'py-2 px-1 text-center rounded-xl border border-slate-200 bg-white text-slate-700 font-bold text-[11px] transition';
+        runPrioritySim();
+    }
+
+    function runPrioritySim() {
+        const hour = document.getElementById('simDepSlider').value;
+        const depStr = `${hour.padStart(2, '0')}:00`;
+        document.getElementById('simDepLabel').innerText = depStr;
+
+        fetch('{{ url_for("api_simulate_priority") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                battery_kwh: 50.0,
+                max_rate_kw: 7.2,
+                current_pct: 20.0,
+                departure_time: depStr,
+                priority_tier: simTier,
+                fleet_rank: 1
+            })
+        })
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('simRank').innerText = `Rank #${d.predicted_rank} of 18`;
+            document.getElementById('simPower').innerText = `${d.predicted_kw} kW`;
+            document.getElementById('simScore').innerText = `${d.total_priority} pts`;
+
+            let desc = "";
+            if (simTier === 'urgent') {
+                desc = `With Urgent tier and ${depStr} departure, your vehicle jumps to Rank #${d.predicted_rank} (+25 pts bonus) and receives ${d.predicted_kw} kW priority power.`;
+            } else if (simTier === 'flexible') {
+                desc = `Flexible Eco tier yields priority during peak morning spikes to help keep the site under the 150 kW cap, charging at ${d.predicted_kw} kW.`;
+            } else {
+                desc = `Standard tier gives you a balanced allocation of ${d.predicted_kw} kW, on track to finish safely before ${depStr}.`;
+            }
+            document.getElementById('simDesc').innerText = desc;
+
+            // Update projected chart trajectory
+            const chargePoints = [20];
+            const p = d.predicted_kw;
+            for (let i = 1; i <= 4; i++) {
+                chargePoints.push(Math.min(100, Math.round(20 + (i * p * 2.0 / 50.0 * 100))));
+            }
+            projectedChart.data.datasets[0].data = chargePoints;
+            projectedChart.data.labels = ['09:00', '11:00', '13:00', '15:00', depStr];
+            projectedChart.update();
+        });
+    }
+
+    // Initial simulation on page load
+    runPrioritySim();
+</script>
+{% endblock %}

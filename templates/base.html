@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Workplace EV Charging Scheduler{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d'
+                        },
+                        electric: {
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .judge-highlight {
+            box-shadow: 0 0 0 4px #eab308, 0 10px 25px -5px rgba(234, 179, 8, 0.4) !important;
+            transition: all 0.3s ease-in-out;
+            position: relative;
+            z-index: 40;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans antialiased">
+    <!-- Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-cyan-600 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
+                        <i class="fa-solid fa-bolt text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-bold bg-gradient-to-r from-emerald-700 to-cyan-800 bg-clip-text text-transparent">GridSync EV</span>
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Track 3.2</span>
+                        </div>
+                        <p class="text-xs text-slate-500">Workplace Charging Scheduler with Explainable AI</p>
+                    </div>
+                </div>
+
+                <!-- Nav Links & Auth -->
+                <div class="flex items-center space-x-4">
+                    {% if current_user %}
+                        <a href="{{ url_for('how_it_works') }}" class="text-sm font-medium text-slate-600 hover:text-emerald-600 transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-circle-question text-emerald-600"></i>
+                            <span>How It Works</span>
+                        </a>
+
+                        <button onclick="toggleGlossaryModal()" class="text-sm font-medium text-slate-600 hover:text-emerald-600 transition flex items-center space-x-1.5">
+                            <i class="fa-solid fa-book-open text-cyan-600"></i>
+                            <span>Glossary</span>
+                        </button>
+
+                        {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('admin_dashboard') }}" class="text-sm font-semibold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition">
+                                <i class="fa-solid fa-sliders mr-1"></i> Admin Console
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('user_dashboard') }}" class="text-sm font-semibold px-3 py-1.5 rounded-lg bg-cyan-50 text-cyan-700 border border-cyan-200 hover:bg-cyan-100 transition">
+                                <i class="fa-solid fa-car-side mr-1"></i> My Vehicles
+                            </a>
+                        {% endif %}
+
+                        <div class="h-6 w-px bg-slate-200"></div>
+
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right hidden sm:block">
+                                <div class="text-sm font-semibold text-slate-800">{{ current_user.full_name }}</div>
+                                <div class="text-xs text-slate-500 capitalize">{{ current_user.role }} Account</div>
+                            </div>
+                            <a href="{{ url_for('logout') }}" class="text-sm font-medium text-rose-600 hover:text-rose-700 p-2 rounded-lg hover:bg-rose-50 transition" title="Log Out">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                            </a>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('how_it_works') }}" class="text-sm font-medium text-slate-600 hover:text-emerald-600 transition">
+                            How It Works
+                        </a>
+                        <button onclick="toggleGlossaryModal()" class="text-sm font-medium text-slate-600 hover:text-emerald-600 transition">
+                            Glossary
+                        </button>
+                        <a href="{{ url_for('login') }}" class="text-sm font-semibold px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-sm">
+                            Sign In
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-3 mb-6">
+                    {% for category, msg in messages %}
+                        <div class="p-4 rounded-xl border flex items-center justify-between {% if category == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% else %}bg-emerald-50 border-emerald-200 text-emerald-800{% endif %}">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid {% if category == 'error' %}fa-triangle-exclamation text-rose-600{% else %}fa-circle-check text-emerald-600{% endif %}"></i>
+                                <span class="text-sm font-medium">{{ msg }}</span>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- E6. Global Glossary Modal (Available anywhere in app) -->
+    <div id="glossaryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-cyan-100 text-cyan-700 flex items-center justify-center">
+                        <i class="fa-solid fa-book-open text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">EV Workplace Glossary & Concepts</h3>
+                        <p class="text-xs text-slate-500">Every term explained in plain English with everyday analogies</p>
+                    </div>
+                </div>
+                <button onclick="toggleGlossaryModal()" class="w-8 h-8 rounded-lg hover:bg-slate-200 text-slate-500 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-sm divide-y divide-slate-100">
+                <div class="pt-2">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>kW (Kilowatt)</span>
+                        <span class="text-xs font-normal text-slate-400">— Power / Speed</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">The rate at which electricity flows right now. Think of it like water flowing through a garden hose or speedometer in a car.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>kWh (Kilowatt-hour)</span>
+                        <span class="text-xs font-normal text-slate-400">— Energy / Battery Tank</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">The total amount of electricity stored or delivered over time. Like gallons of fuel in a gas tank or battery percentage on your smartphone.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>Power Cap</span>
+                        <span class="text-xs font-normal text-slate-400">— Site Connection Limit</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">The maximum total electrical power (e.g. 150 kW) the workplace grid connection can handle at any single instant. If total car charging exceeds this cap, the building circuit breaker trips.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>Laxity</span>
+                        <span class="text-xs font-normal text-slate-400">— Spare Time Cushion</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">How much idle time a car has before it must charge to finish by departure. A high laxity means the car can wait; zero or negative laxity means it must charge at maximum speed immediately.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>Priority Score</span>
+                        <span class="text-xs font-normal text-slate-400">— Smart Fairness Score</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">A transparent composite score made of three parts: Charge Deficit (how empty the battery is), Urgency (required speed vs car's maximum rate), and Time Left until departure.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>Uncontrolled Charging</span>
+                        <span class="text-xs font-normal text-slate-400">— Naive Baseline</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">The default behavior where every car draws full power the second it plugs in, regardless of site limits. This causes severe peak spikes that breach the power cap.</p>
+                </div>
+                <div class="pt-3">
+                    <h4 class="font-bold text-emerald-700 flex items-center space-x-1.5">
+                        <span>Stand-in Data</span>
+                        <span class="text-xs font-normal text-slate-400">— Transparent Real-World Fallback</span>
+                    </h4>
+                    <p class="text-slate-600 mt-1">When real historical drivers did not type a requested departure time into the Caltech app, their actual unplug time and delivered kWh are used as ground-truth stand-ins.</p>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+                <button onclick="toggleGlossaryModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg transition">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            GridSync Workplace EV Charging Scheduler • Grounded in Caltech ACN-Data • Track 3.2 Submission
+        </div>
+    </footer>
+
+    <script>
+        function toggleGlossaryModal() {
+            const m = document.getElementById('glossaryModal');
+            m.classList.toggle('hidden');
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

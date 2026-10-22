@@ -1,0 +1,226 @@
+{
+  "users": [
+    {
+      "id": "admin_01",
+      "username": "admin",
+      "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "full_name": "Site Facilities Manager",
+      "role": "admin",
+      "vehicles": []
+    },
+    {
+      "id": "usr_priya",
+      "username": "priya",
+      "password_hash": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+      "full_name": "Priya Sharma",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_priya_car",
+          "user_id": "usr_priya",
+          "user_name": "Priya Sharma",
+          "name": "Tesla Model 3 Long Range",
+          "vehicle_type": "EV Car",
+          "battery_capacity_kwh": 60.0,
+          "max_rate_kw": 7.2,
+          "current_charge_pct": 50.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": true,
+          "current_session_id": "sess_151946__car",
+          "priority_tier": "urgent",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 2
+        },
+        {
+          "id": "veh_priya_bike",
+          "user_id": "usr_priya",
+          "user_name": "Priya Sharma",
+          "name": "Ather 450X EV Commuter",
+          "vehicle_type": "EV Bike",
+          "battery_capacity_kwh": 3.7,
+          "max_rate_kw": 1.2,
+          "current_charge_pct": 70.0,
+          "target_charge_pct": 95.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "urgent",
+          "departure_time": "18:00",
+          "priority_fleet_rank": 2
+        }
+      ]
+    },
+    {
+      "id": "usr_rahul",
+      "username": "rahul",
+      "password_hash": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+      "full_name": "Rahul Verma",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_rahul_scooter",
+          "user_id": "usr_rahul",
+          "user_name": "Rahul Verma",
+          "name": "Ola S1 Pro EV Scooter",
+          "vehicle_type": "EV Scooter",
+          "battery_capacity_kwh": 4.0,
+          "max_rate_kw": 1.0,
+          "current_charge_pct": 45.0,
+          "target_charge_pct": 90.0,
+          "is_plugged_in": true,
+          "current_session_id": "live_session_rahul_scooter",
+          "priority_tier": "standard",
+          "departure_time": "17:30",
+          "priority_fleet_rank": 1
+        }
+      ]
+    },
+    {
+      "id": "usr_alex",
+      "username": "alex",
+      "password_hash": "e606e38b0d8c19b24cf0ee3808183162ea7cd63ff7912dbb22b5e803286b4446",
+      "full_name": "Alex Chen",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_alex_suv",
+          "user_id": "usr_alex",
+          "user_name": "Alex Chen",
+          "name": "Hyundai Ioniq 5 AWD",
+          "vehicle_type": "EV SUV / Van",
+          "battery_capacity_kwh": 77.4,
+          "max_rate_kw": 10.5,
+          "current_charge_pct": 60.0,
+          "target_charge_pct": 90.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "18:00",
+          "priority_fleet_rank": 1
+        }
+      ]
+    },
+    {
+      "id": "usr_2bbc4564",
+      "username": "test_driver_multi",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "full_name": "Test Multicar Driver",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_732d7f2e",
+          "user_id": "usr_2bbc4564",
+          "user_name": "Test Multicar Driver",
+          "name": "My Commuter Sedan",
+          "vehicle_type": "EV Car",
+          "battery_capacity_kwh": 55.0,
+          "max_rate_kw": 7.0,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        },
+        {
+          "id": "veh_dadc843b",
+          "user_id": "usr_2bbc4564",
+          "user_name": "Test Multicar Driver",
+          "name": "My Fast E-Bike",
+          "vehicle_type": "EV Bike",
+          "battery_capacity_kwh": 3.5,
+          "max_rate_kw": 1.2,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        }
+      ]
+    },
+    {
+      "id": "usr_901b6af7",
+      "username": "driver_cfd1bf",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "full_name": "Test Multicar Driver",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_1be1323e",
+          "user_id": "usr_901b6af7",
+          "user_name": "Test Multicar Driver",
+          "name": "My Commuter Sedan",
+          "vehicle_type": "EV Car",
+          "battery_capacity_kwh": 55.0,
+          "max_rate_kw": 7.0,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        },
+        {
+          "id": "veh_15eb2051",
+          "user_id": "usr_901b6af7",
+          "user_name": "Test Multicar Driver",
+          "name": "My Fast E-Bike",
+          "vehicle_type": "EV Bike",
+          "battery_capacity_kwh": 3.5,
+          "max_rate_kw": 1.2,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        }
+      ]
+    },
+    {
+      "id": "usr_2be974d3",
+      "username": "driver_7ed85f",
+      "password_hash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+      "full_name": "Test Multicar Driver",
+      "role": "user",
+      "vehicles": [
+        {
+          "id": "veh_60464c80",
+          "user_id": "usr_2be974d3",
+          "user_name": "Test Multicar Driver",
+          "name": "My Commuter Sedan",
+          "vehicle_type": "EV Car",
+          "battery_capacity_kwh": 55.0,
+          "max_rate_kw": 7.0,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        },
+        {
+          "id": "veh_81c40950",
+          "user_id": "usr_2be974d3",
+          "user_name": "Test Multicar Driver",
+          "name": "My Fast E-Bike",
+          "vehicle_type": "EV Bike",
+          "battery_capacity_kwh": 3.5,
+          "max_rate_kw": 1.2,
+          "current_charge_pct": 25.0,
+          "target_charge_pct": 100.0,
+          "is_plugged_in": false,
+          "current_session_id": null,
+          "priority_tier": "standard",
+          "departure_time": "17:00",
+          "priority_fleet_rank": 1
+        }
+      ]
+    }
+  ]
+}
